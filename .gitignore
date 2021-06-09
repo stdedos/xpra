@@ -7,6 +7,10 @@
 # pycharm IDE:
 /.idea
 
+# Ignore venvs inside the folder
+.venv/
+venv/
+
 # temporary files:
 *.swp
 
