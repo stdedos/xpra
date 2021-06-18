@@ -219,6 +219,45 @@ def test_xpra_autocomplete_flags_grep():
     assert proc.returncode == 0
 
 
+def test_xpra_autocomplete_debug_opts():
+    proc = xpra_complete('attach -d ')
+    streams = proc.communicate()
+    stdout = streams[0].strip()
+    completions = stdout.split(' ')
+    assert len(completions) == 111
+    assert proc.returncode == 0
+
+    proc = xpra_complete('attach -d sc')
+    streams = proc.communicate()
+    stdout = streams[0].strip()
+    completions = stdout.split(' ')
+    assert sorted(completions) == sorted(['scaling', 'score', 'screen', 'scroll'])
+    assert proc.returncode == 0
+
+    proc = xpra_complete('attach -d sca')
+    streams = proc.communicate()
+    stdout = streams[0].strip()
+    completions = stdout.split(' ')
+    assert sorted(completions) == sorted(['scaling'])
+    assert proc.returncode == 0
+    # But will leave a space - should find a way to assert that
+
+    proc = xpra_complete('attach -d scaling,sc')
+    streams = proc.communicate()
+    stdout = streams[0].strip()
+    completions = stdout.split(' ')
+    assert sorted(completions) == sorted(['score', 'screen', 'scroll'])
+    assert proc.returncode == 0
+
+    proc = xpra_complete('attach -d scaling,scro')
+    streams = proc.communicate()
+    stdout = streams[0].strip()
+    completions = stdout.split(' ')
+    assert completions == ['scaling,scroll']
+    assert proc.returncode == 0
+    # But won't leave a space - should find a way to assert that
+
+
 if __name__ == '__main__':
     # # Running tests via PyCharm gives erroneous results:
     # Verb arguments:

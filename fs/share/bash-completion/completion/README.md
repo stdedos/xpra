@@ -6,7 +6,6 @@
   (or out of order e.g. `xpra attach --webcam= `, expecting display again)
 * Fuller testing `xpra control :1 ...` completion
   (ofc, I need to first find the arguments to that ...)
-* `xpra -d` completion
 
 ## Developement Notes
 Test with e.g.:

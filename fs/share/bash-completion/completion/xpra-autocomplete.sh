@@ -95,8 +95,8 @@ xpra-return-displays() {
 }
 
 _xpra() {
-	local c cur words cword cur opts
-	local COMMANDS flag
+	local cur prev words cword cur opts
+	local c prev_arg COMMANDS flag
 	local -a TRICKY_COMMANDS
 
 	local shortcut_verbs='-h --help help --version'
@@ -112,7 +112,7 @@ _xpra() {
 
 	# # Ignore ':' as a word-splitter
 	# __get_cword_at_cursor_by_ref ":" words cword cur
-	_get_comp_words_by_ref -n ":=" -w words -i cword -c cur
+	_get_comp_words_by_ref -n ":=" -w words -i cword -c cur -p prev
 
 	if "${COMPLETION_DEBUG}" ; then
 		BASH_XTRACEFD="19"
@@ -126,7 +126,7 @@ _xpra() {
 			echo
 			echo "cur=${cur}"
 			echo "cword=${cword}"
-			echo "prev=${words[${#words}-1]}"
+			echo "prev=${prev}"
 			echo "words[1]=${words[1]}"
 			echo
 			echo "COMP_LINE=${COMP_LINE}"
@@ -185,6 +185,25 @@ _xpra() {
 		[ "${words[3]}" == "client" ] && opts="${opts//client/}"
 
 		mapfile -t COMPREPLY <<< "$(compgen -W "${opts}" -- "${cur}")"
+	elif [ "${prev}" == "-d" ] || [ "${words[$((cword - 2))]}" == "-d" ] ; then
+		COMMANDS="$(xpra -d help |& grep -P '^\s*\*' | awk '{print $2}')"
+		prev_arg="${prev}"
+		prev=
+		if [[ "${cur}" == *,* ]] ; then
+			prev="${cur%,*}"
+			cur="${cur##*,}"
+			COMMANDS="$(grep -vP "(${prev/,/|})" <<< "${COMMANDS}")"
+		fi
+		COMMANDS="$(tr '\n' ' ' <<< "${COMMANDS}")"
+
+		[ -n "${prev}" ] && compopt -o nospace
+
+		mapfile -t COMPREPLY <<< "$(compgen -W "${COMMANDS}" -- "${cur}")"
+		if [[ ${#COMPREPLY[@]} -eq 1 && -n "${prev}" ]] ; then
+			COMPREPLY=("${COMPREPLY/#/${prev},}")
+		else
+			:
+		fi
 	else
 		COMMANDS="$(xpra --help | grep -P '^\s*--?' | perl -pe 's/^\s+//' | perl -pe 's/,\s+/\n/' | grep -P '^\s*--?' | awk '{print $1}' | grep -ve '--close-stderr')"
 		# From xpra --help:
